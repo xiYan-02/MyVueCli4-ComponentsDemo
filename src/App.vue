@@ -1,32 +1,89 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+    <Header />
+    <add-todos @handleAdd="handleAddTodo"></add-todos>
+    <div class="container">
+      <Todos :todos="datas" @delItem="delItem"></Todos>
     </div>
-    <router-view/>
   </div>
 </template>
 
+<script>
+import Todos from "./components/Todos";
+import AddTodos from "./components/AddTodo";
+import axios from "axios";
+
+export default {
+  name: "app",
+  data() {
+    return {
+      datas: []
+    };
+  },
+  methods: {
+    delItem(id) {
+      // 这里也可以用splice,但有时候id不一定是连续的数字
+      // this.datas = this.datas.filter(item => item.id != id);
+
+      // 删除对象
+      axios
+        .delete(`http://jsonplaceholder.typicode.com/todos/${id}`)
+        .then(res => {
+          console.log(res);
+          this.datas = this.datas.filter(item => item.id != id);
+        })
+        .catch(err => console.log(err));
+    },
+    handleAddTodo(newTodo) {
+      // this.datas = [...this.datas,newTodo] --> es6语法，与push方法相同
+
+      // es6语法，与shift方法相同
+      // this.datas = [newTodo, ...this.datas];
+
+      // 添加数据
+      axios
+        .post("http://jsonplaceholder.typicode.com/todos", newTodo)
+        .then(res => {
+          this.datas = [newTodo, ...this.datas];
+        })
+        .catch(err => console.log(err));
+    }
+  },
+  components: {
+    Todos,
+    Header: () => import("./components/layout/Hander"), // 懒加载，按需加载
+    AddTodos
+  },
+  mounted() {
+    // 请求数据,?_limit=10 服务端提供的一个查询字符串
+    axios
+      .get("http://jsonplaceholder.typicode.com/todos?_limit=10")
+      .then(res => {
+        // console.log(res)
+        // console.log(res.data);
+
+        this.datas = res.data;
+      })
+      .catch(err => console.log(err));
+  }
+};
+</script>
+
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+* {
+  box-sizing: border-box;
+  margin: 0px;
+  padding: 0px;
 }
-
-#nav {
-  padding: 30px;
+body {
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  line-height: 1.6;
+  background: #e8f7f0;
 }
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
+/* .container {
+  max-width: 1100px;
+  margin: auto;
+  overflow: auto;
+  padding: 0 2rem;
+} */
 </style>
